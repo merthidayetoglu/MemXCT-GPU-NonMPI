@@ -41,11 +41,6 @@ void findlength(float theta, float rho, float *d, float *length){
 
 void findnumpix(float theta, float rho, float *d, int *numpix){
 
-  int numproc;
-  int myid;
-  MPI_Comm_size(MPI_COMM_WORLD,&numproc);
-  MPI_Comm_rank(MPI_COMM_WORLD,&myid);
-
   //RAY'S VECTOR REPRESENTAION
   float x = rho*cos(theta)+0.5*raylength*sin(theta);
   float y = rho*sin(theta)-0.5*raylength*cos(theta);
@@ -142,11 +137,6 @@ void findnumpix(float theta, float rho, float *d, int *numpix){
 }
 
 void findpixind(float theta, float rho, float *d, int *numpix, int offset, int *pixind){
-
-  int numproc;
-  int myid;
-  MPI_Comm_size(MPI_COMM_WORLD,&numproc);
-  MPI_Comm_rank(MPI_COMM_WORLD,&myid);
 
   //RAY'S VECTOR REPRESENTAION
   float x = rho*cos(theta)+0.5*raylength*sin(theta);
