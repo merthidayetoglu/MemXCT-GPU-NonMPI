@@ -1,5 +1,12 @@
+#ifndef __KERNELS_H__
+#define __KERNELS_H__
+
+
 #include "vars.h"
-#include "vars_gpu.h"
+//#include "vars_gpu.h"
+#include <cuda.h>
+#include <cuda_runtime_api.h>
+#include <cuComplex.h>
 
 extern int *raysendstart;
 extern int *rayrecvstart;
@@ -80,6 +87,41 @@ extern float *raypart;
 extern float *raybuff;
 extern int numpix;
 extern int numray;
+
+__global__ void kernel_SpMV_buffered(float *y, float *x, short *index, float *value, int numrow, int *blockdispl, int *buffdispl, int *buffmap, int buffsize){
+  extern __shared__ float shared[];
+  float reduce = 0;
+  int ind;
+  for(int buff = blockdispl[blockIdx.x]; buff < blockdispl[blockIdx.x+1]; buff++){
+    for(int i = threadIdx.x; i < buffsize; i += blockDim.x)
+      shared[i] = x[buffmap[buff*buffsize+i]];
+    __syncthreads();
+    for(int n = buffdispl[buff]; n < buffdispl[buff+1]; n++){
+      ind = n*blockDim.x+threadIdx.x;
+      reduce = reduce + shared[index[ind]]*value[ind];
+    }
+    __syncthreads();
+  }
+  ind = blockIdx.x*blockDim.x+threadIdx.x;
+  if(ind < numrow)
+    y[ind] = reduce;
+}
+/*
+__global__ void kernel_SpReduce(float *y, float *x, int *displ, int *index, int numrow){
+  int row = blockIdx.x*blockDim.x+threadIdx.x;
+  float reduce = 0;
+  if(row < numrow){
+    for(int n = displ[row]; n < displ[row+1]; n++)
+      reduce = reduce + x[index[n]];
+    y[row] = reduce;
+  }
+}
+__global__ void kernel_SpGather(float *y, float *x, int *index, int numrow){
+  int row = blockIdx.x*blockDim.x+threadIdx.x;
+  if(row < numrow)
+    y[row] = x[index[row]];
+}
+*/
 
 void setup_gpu(float **obj,float **gra, float **dir,float **mes,float **res,float **ray){
 
@@ -236,35 +278,4 @@ void backprojection(float *gra, float *res){
   numback++;
 }
 
-__global__ void kernel_SpMV_buffered(float *y, float *x, short *index, float *value, int numrow, int *blockdispl, int *buffdispl, int *buffmap, int buffsize){
-  extern __shared__ float shared[];
-  float reduce = 0;
-  int ind;
-  for(int buff = blockdispl[blockIdx.x]; buff < blockdispl[blockIdx.x+1]; buff++){
-    for(int i = threadIdx.x; i < buffsize; i += blockDim.x)
-      shared[i] = x[buffmap[buff*buffsize+i]];
-    __syncthreads();
-    for(int n = buffdispl[buff]; n < buffdispl[buff+1]; n++){
-      ind = n*blockDim.x+threadIdx.x;
-      reduce = reduce + shared[index[ind]]*value[ind];
-    }
-    __syncthreads();
-  }
-  ind = blockIdx.x*blockDim.x+threadIdx.x;
-  if(ind < numrow)
-    y[ind] = reduce;
-}
-__global__ void kernel_SpReduce(float *y, float *x, int *displ, int *index, int numrow){
-  int row = blockIdx.x*blockDim.x+threadIdx.x;
-  float reduce = 0;
-  if(row < numrow){
-    for(int n = displ[row]; n < displ[row+1]; n++)
-      reduce = reduce + x[index[n]];
-    y[row] = reduce;
-  }
-}
-__global__ void kernel_SpGather(float *y, float *x, int *index, int numrow){
-  int row = blockIdx.x*blockDim.x+threadIdx.x;
-  if(row < numrow)
-    y[row] = x[index[row]];
-}
+#endif //__KERNELS_H__

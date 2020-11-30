@@ -1,4 +1,7 @@
-#include "vars.h"
+#include <vars.h>
+#include <raytrace.h>
+#include <kernels.h>
+#include <omp.h> 
 
 double ftime = 0;
 double btime = 0;
@@ -95,7 +98,8 @@ int main(int argc, char** argv){
 
   int numthreads;
   #pragma omp parallel
-  if(omp_get_thread_num()==0)numthreads=omp_get_num_threads();
+  if(omp_get_thread_num()==0)
+          numthreads=omp_get_num_threads();
 
   //SCANNING GEOMETRY DATA
   char *chartemp;
@@ -323,7 +327,7 @@ int main(int argc, char** argv){
   fclose(thetaf);*/
 
   float *mestheta = new float[numthe];
-  printf("INPUT THETA DATA\n");
+  printf("INPUT THETA DATA: %s\n",thefile);
   FILE *thetaf = fopen(thefile,"rb");
   fread(mestheta,sizeof(float),numthe,thetaf);
   fclose(thetaf);
@@ -952,6 +956,8 @@ int main(int argc, char** argv){
     float error = norm_kernel(res,numray);
     float gradnorm = norm_kernel(gra,numpix);
     printf("iter: %d error: %e gradnorm: %e\n",0,error,gradnorm);
+    printf("Before save direction.\n");
+    fflush(stdout);
     //SAVE DIRECTION
     copy_kernel(dir,gra,numpix);
     float oldgradnorm = gradnorm;
@@ -981,6 +987,8 @@ int main(int argc, char** argv){
       float gradnorm = norm_kernel(gra,numpix);
       //UPDATE DIRECTION
       printf("iter: %d error: %e gradnorm: %e\n",iter,error,gradnorm);
+      printf("Before sxay kernel\n");
+      fflush(stdout);
       //fprintf(resf,"%e %e\n",error,gradnorm);
       float beta = gradnorm/oldgradnorm;
       //float beta = 0;

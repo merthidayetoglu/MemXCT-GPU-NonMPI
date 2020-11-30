@@ -1,3 +1,6 @@
+#ifndef __VARS_H__
+#define __VARS_H__ 
+
 #include <stdio.h>
 #include <cmath>
 #include <complex>
@@ -28,3 +31,6 @@ float dot_kernel(float*, float*, int);
 void copy_kernel(float*, float*, int);
 void subtract_kernel(float*, float*, float*, int);
 void saxpy_kernel(float*, float*, float, float*, int);
+
+
+#endif //__VARS_H__

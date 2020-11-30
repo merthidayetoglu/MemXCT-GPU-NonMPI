@@ -1,3 +1,6 @@
+#ifndef __RAYTRACE_H__
+#define __RAYTRACE_H__
+
 #include "vars.h"
 
 extern float raylength;
@@ -294,3 +297,4 @@ void d2xy(int n, int d, int *x, int *y) {
         t /= 4;
     }
 }
+#endif //__RAYTRACE_H__
