@@ -319,13 +319,7 @@ int main(int argc, char** argv){
     int yglobalind = (int)((y-ystart)/pixsize);
     pixglobalind[ind] = yglobalind*numxtile*spatsize+xglobalind;
   }
-
-  /*float *mestheta = new float[numthe];
-  if(myid==0)printf("INPUT THETA DATA\n");
-  FILE *thetaf = fopen("brain-2x-5000-5001.1s.theta.4501.data","rb");
-  fread(mestheta,sizeof(float),numthe,thetaf);
-  fclose(thetaf);*/
-
+ 
   float *mestheta = new float[numthe];
   printf("INPUT THETA DATA: %s\n",thefile);
   FILE *thetaf = fopen(thefile,"rb");
@@ -373,76 +367,7 @@ int main(int argc, char** argv){
   }
   //delete[] mestheta;
   delete[] specll;
-  printf("SKIP DOMAIN PARTITIONING\n");
-  /*rayrecvcount = new int[numproc];
-  raysendcount = new int[numproc];
-  rayrecvstart = new int[numproc];
-  raysendstart = new int[numproc];
-  float *lengthtemp = new float[mynumray];
-  int **rayrecvtemp = new int*[numproc];
-  for(int p = 0; p < numproc; p++){
-    #pragma omp parallel for
-    for(int k = 0; k < mynumray; k++){
-      lengthtemp[k] = 0;
-      float rho = raycoor[k].real();
-      float theta = raycoor[k].imag();
-      for(int tile = spatstart[p]; tile < spatstart[p]+numspats[p]; tile++){
-        float domain[4];
-        domain[0]=spatll[tile].real();
-        domain[1]=domain[0]+spatsize*pixsize;
-        domain[2]=spatll[tile].imag();
-        domain[3]=domain[2]+spatsize*pixsize;
-        //REMOVE SPATIAL EDGE CONDITION
-        if(domain[1] > xstart+numx*pixsize)domain[1]=xstart+numx*pixsize;
-        if(domain[3] > ystart+numy*pixsize)domain[3]=ystart+numy*pixsize;
-        findlength(theta,rho,&domain[0],&lengthtemp[k]);
-      }
-    }
-    rayrecvcount[p] = 0;
-    for(int k = 0; k < mynumray; k++)
-      if(lengthtemp[k]>0)
-        rayrecvcount[p]++;
-    rayrecvtemp[p] = new int[rayrecvcount[p]];
-    rayrecvcount[p] = 0;
-    for(int k = 0; k < mynumray; k++)
-      if(lengthtemp[k]>0){
-        rayrecvtemp[p][rayrecvcount[p]]=k;
-        rayrecvcount[p]++;
-      }
-  }
-  delete[] lengthtemp;
-  //EXCHANGE SEND & RECV MAPS
-  MPI_Alltoall(rayrecvcount,1,MPI_INTEGER,raysendcount,1,MPI_INTEGER,MPI_COMM_WORLD);
-  rayrecvstart[0] = 0;
-  raysendstart[0] = 0;
-  for(int p = 1; p < numproc; p++){
-    rayrecvstart[p] = rayrecvstart[p-1] + rayrecvcount[p-1];
-    raysendstart[p] = raysendstart[p-1] + raysendcount[p-1];
-  }
-  raynuminc = rayrecvstart[numproc-1]+rayrecvcount[numproc-1];
-  long raynumincall = raynuminc;
-  long raynumoutall = raynumout;
-  MPI_Allreduce(MPI_IN_PLACE,&raynumincall,1,MPI_LONG,MPI_SUM,MPI_COMM_WORLD);
-  MPI_Allreduce(MPI_IN_PLACE,&raynumoutall,1,MPI_LONG,MPI_SUM,MPI_COMM_WORLD);
-  printf("myid %d raynuminc %d/%li raynumout %d/%li\n",myid,raynuminc,raynumincall,raynumout,raynumoutall);
-  int *raysendlist = new int[raynumout];
-  rayrecvlist = new int[raynuminc];
-  for(int p = 0; p < numproc; p++){
-    #pragma omp parallel for
-    for(int k = 0; k < rayrecvcount[p]; k++)
-      rayrecvlist[rayrecvstart[p]+k] = rayrecvtemp[p][k];
-    delete[] rayrecvtemp[p];
-  }
-  delete[] rayrecvtemp;
-  MPI_Alltoallv(rayrecvlist,rayrecvcount,rayrecvstart,MPI_INTEGER,raysendlist,raysendcount,raysendstart,MPI_INTEGER,MPI_COMM_WORLD);
-  //EXCHANGE RAY COORDINATES
-  complex<float> *raycoorinc = new complex<float>[raynuminc];
-  complex<float> *raycoorout = new complex<float>[raynumout];
-  #pragma omp parallel for
-  for(int k = 0; k < raynuminc; k++)
-    raycoorinc[k] = raycoor[rayrecvlist[k]];
-  MPI_Alltoallv(raycoorinc,rayrecvcount,rayrecvstart,MPI_COMPLEX,raycoorout,raysendcount,raysendstart,MPI_COMPLEX,MPI_COMM_WORLD);
-  delete[] raycoor;*/
+  printf("SKIP DOMAIN PARTITIONING\n"); 
   double timep = omp_get_wtime();
   double project_time = omp_get_wtime();
   printf("\nCONSTRUCT PROJECTION MATRIX\n");

@@ -106,22 +106,7 @@ __global__ void kernel_SpMV_buffered(float *y, float *x, short *index, float *va
   if(ind < numrow)
     y[ind] = reduce;
 }
-/*
-__global__ void kernel_SpReduce(float *y, float *x, int *displ, int *index, int numrow){
-  int row = blockIdx.x*blockDim.x+threadIdx.x;
-  float reduce = 0;
-  if(row < numrow){
-    for(int n = displ[row]; n < displ[row+1]; n++)
-      reduce = reduce + x[index[n]];
-    y[row] = reduce;
-  }
-}
-__global__ void kernel_SpGather(float *y, float *x, int *index, int numrow){
-  int row = blockIdx.x*blockDim.x+threadIdx.x;
-  if(row < numrow)
-    y[row] = x[index[row]];
-}
-*/
+ 
 
 void setup_gpu(float **obj,float **gra, float **dir,float **mes,float **res,float **ray){
 
@@ -166,46 +151,44 @@ void setup_gpu(float **obj,float **gra, float **dir,float **mes,float **res,floa
   cudaMalloc((void**)&proj_blockdispl_d,sizeof(int)*(proj_numblocks+1));
   cudaMalloc((void**)&proj_buffdispl_d,sizeof(int)*(proj_blocknztot+1));
   cudaMalloc((void**)&proj_buffmap_d,sizeof(int)*proj_blocknztot*proj_buffsize);
-  cudaMalloc((void**)&proj_buffindex_d,sizeof(int)*proj_buffnztot*proj_blocksize);
-  cudaMalloc((void**)&proj_buffvalue_d,sizeof(float)*proj_buffnztot*proj_blocksize);
+  
+  // cudaMalloc((void**)&proj_buffindex_d,sizeof(int)*proj_buffnztot*proj_blocksize);
+  // cudaMalloc((void**)&proj_buffvalue_d,sizeof(float)*proj_buffnztot*proj_blocksize);
+  cudaMallocManaged((void**)&proj_buffindex_d, sizeof(int)*proj_buffnztot*proj_blocksize);
+  cudaMallocManaged((void**)&proj_buffvalue_d, sizeof(float)*proj_buffnztot*proj_blocksize);
+  cudaMemAdvise(proj_buffindex_d, sizeof(int)*proj_buffnztot*proj_blocksize, cudaMemAdviseSetAccessedBy, 0);
+  cudaMemAdvise(proj_buffvalue_d, sizeof(float)*proj_buffnztot*proj_blocksize, cudaMemAdviseSetAccessedBy, 0);
+  
   cudaMemcpy(proj_blockdispl_d,proj_blockdispl,sizeof(int)*(proj_numblocks+1),cudaMemcpyHostToDevice);
   cudaMemcpy(proj_buffdispl_d,proj_buffdispl,sizeof(int)*(proj_blocknztot+1),cudaMemcpyHostToDevice);
   cudaMemcpy(proj_buffmap_d,proj_buffmap,sizeof(int)*proj_blocknztot*proj_buffsize,cudaMemcpyHostToDevice);
-  cudaMemcpy(proj_buffindex_d,proj_buffindex,sizeof(short)*proj_buffnztot*proj_blocksize,cudaMemcpyHostToDevice);
-  cudaMemcpy(proj_buffvalue_d,proj_buffvalue,sizeof(float)*proj_buffnztot*proj_blocksize,cudaMemcpyHostToDevice);
-
-  /*for(int block = 0; block < proj_numblocks; block++)
-    for(int buff = proj_blockdispl[block]; buff < proj_blockdispl[block+1]; buff++){
-      printf("                                              block %d buff %d\n",block,buff);
-      for(int m = proj_buffdispl[buff]; m < proj_buffdispl[buff+1]; m++){
-        for(int n = 0; n < proj_blocksize; n++)
-          printf("%d ",proj_buffindex[m*proj_blocksize+n]);
-        printf("\n");
-      }
-    }
-  for(int block = 0; block < proj_numblocks; block++)
-    for(int buff = proj_blockdispl[block]; buff < proj_blockdispl[block+1]; buff++){
-      printf("                                              block %d buff %d\n",block,buff);
-      for(int m = proj_buffdispl[buff]; m < proj_buffdispl[buff+1]; m++){
-        for(int n = 0; n < proj_blocksize; n++)
-          printf("%0.1f ",proj_buffvalue[m*proj_blocksize+n]);
-        printf("\n");
-      }
-    }
-  printf("buffnztot: %d blocksize: %d %d\n",proj_buffnztot,proj_blocksize,proj_buffnztot*proj_blocksize);
-  printf("blocknztot: %d buffsize: %d %d\n",proj_blocknztot,proj_buffsize,proj_blocknztot*proj_buffsize);*/
+  // cudaMemcpy(proj_buffindex_d,proj_buffindex,sizeof(short)*proj_buffnztot*proj_blocksize,cudaMemcpyHostToDevice);
+  // cudaMemcpy(proj_buffvalue_d,proj_buffvalue,sizeof(float)*proj_buffnztot*proj_blocksize,cudaMemcpyHostToDevice);
+  memcpy(proj_buffindex_d,proj_buffindex,sizeof(short)*proj_buffnztot*proj_blocksize);
+  memcpy(proj_buffvalue_d,proj_buffvalue,sizeof(float)*proj_buffnztot*proj_blocksize);
+  
 
   cudaMalloc((void**)&back_blockdispl_d,sizeof(int)*(back_numblocks+1));
   cudaMalloc((void**)&back_buffdispl_d,sizeof(int)*(back_blocknztot+1));
   cudaMalloc((void**)&back_buffmap_d,sizeof(int)*back_blocknztot*back_buffsize);
-  cudaMalloc((void**)&back_buffindex_d,sizeof(int)*back_buffnztot*back_blocksize);
-  cudaMalloc((void**)&back_buffvalue_d,sizeof(float)*back_buffnztot*back_blocksize);
+  
+  // cudaMalloc((void**)&back_buffindex_d,sizeof(int)*back_buffnztot*back_blocksize);
+  // cudaMalloc((void**)&back_buffvalue_d,sizeof(float)*back_buffnztot*back_blocksize);
+  cudaMallocManaged((void**)&back_buffindex_d,sizeof(int)*back_buffnztot*back_blocksize);
+  cudaMallocManaged((void**)&back_buffvalue_d,sizeof(float)*back_buffnztot*back_blocksize);
+  cudaMemAdvise(back_buffindex_d, sizeof(int)*back_buffnztot*back_blocksize, cudaMemAdviseSetAccessedBy, 0);
+  cudaMemAdvise(back_buffvalue_d, sizeof(float)*back_buffnztot*back_blocksize, cudaMemAdviseSetAccessedBy, 0);
+
+
   cudaMemcpy(back_blockdispl_d,back_blockdispl,sizeof(int)*(back_numblocks+1),cudaMemcpyHostToDevice);
   cudaMemcpy(back_buffdispl_d,back_buffdispl,sizeof(int)*(back_blocknztot+1),cudaMemcpyHostToDevice);
   cudaMemcpy(back_buffmap_d,back_buffmap,sizeof(int)*back_blocknztot*back_buffsize,cudaMemcpyHostToDevice);
-  cudaMemcpy(back_buffindex_d,back_buffindex,sizeof(short)*back_buffnztot*back_blocksize,cudaMemcpyHostToDevice);
-  cudaMemcpy(back_buffvalue_d,back_buffvalue,sizeof(float)*back_buffnztot*back_blocksize,cudaMemcpyHostToDevice);
 
+  // cudaMemcpy(back_buffindex_d,back_buffindex,sizeof(short)*back_buffnztot*back_blocksize,cudaMemcpyHostToDevice);
+  // cudaMemcpy(back_buffvalue_d,back_buffvalue,sizeof(float)*back_buffnztot*back_blocksize,cudaMemcpyHostToDevice);
+  memcpy(back_buffindex_d,back_buffindex,sizeof(short)*back_buffnztot*back_blocksize);
+  memcpy(back_buffvalue_d,back_buffvalue,sizeof(float)*back_buffnztot*back_blocksize);
+ 
   float backmem = 0;
   backmem = backmem + sizeof(int)/1e9*(back_numblocks+1);
   backmem = backmem + sizeof(int)/1e9*(back_blocknztot+1);
@@ -219,8 +202,7 @@ void setup_gpu(float **obj,float **gra, float **dir,float **mes,float **res,floa
   cudaMalloc((void**)&tomogram_d,sizeof(float)*numpix);
   cudaMalloc((void**)&sinogram_d,sizeof(float)*numray);
 
-  //cudaFuncSetAttribute(kernel_SpMV_buffered,cudaFuncAttributeMaxDynamicSharedMemorySize,98304);
-}
+ }
 
 void projection(float *mes, float *obj){
   double timef = omp_get_wtime();

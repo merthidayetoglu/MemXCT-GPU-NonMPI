@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #DOMAIN INFORMATION
-export NUMTHE=750
-export NUMRHO=512
+export NUMTHE=2400
+export NUMRHO=2048
 export PIXSIZE=1
 #SOLVER DATA
 export NUMITER=24
@@ -16,9 +16,9 @@ export BACKBLOCK=256
 export PROJBUFF=48 #KB
 export BACKBUFF=48 #KB
 #I/O FILES
-export THEFILE=./datasets/ADS2_theta.bin
-export SINFILE=./datasets/ADS2_sinogram.bin
-export OUTFILE=./datasets/recon_ADS2.bin
+export THEFILE=./datasets/ADS4_theta.bin
+export SINFILE=./datasets/ADS4_sinogram.bin
+export OUTFILE=./datasets/recon_ADS4.bin
 
 export OMP_NUM_THREADS=1
 
