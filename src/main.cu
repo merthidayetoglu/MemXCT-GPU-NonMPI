@@ -3,6 +3,10 @@
 #include <kernels.h>
 #include <omp.h> 
 
+
+
+mem_type mem;
+
 double ftime = 0;
 double btime = 0;
 double fktime = 0;
@@ -26,6 +30,19 @@ float raylength; //RAYLENGTH
 char *sinfile; //SINOGRAM FILE
 char *thefile; //THETA FILE
 char *outfile; //OUTPUT FILE
+
+
+const char *pidxfile; // for dragon 
+const char *pvalfile; // for dragon
+const char *bidxfile; // for dragon
+const char *bvalfile; // for dragon
+
+extern short *proj_buffindex_d;
+extern float *proj_buffvalue_d;
+extern short *back_buffindex_d;
+extern float *back_buffvalue_d;
+
+
 
 int numiter;
 
@@ -96,6 +113,15 @@ int main(int argc, char** argv){
 
   double timetot = omp_get_wtime();
 
+
+  if(argc !=2){
+      printf("Requires 1 argument\n Usage: ./build/exe/src/main.cu.exe mem_type>\n");
+      printf("\t\t mem_type: GPUMEM = 0, UVM_READONLY = 1, UVM_DIRECT = 2, DRAGON_MAP = 5\n");
+      return -1;
+  }
+
+  mem = (mem_type)atoi(argv[1]);
+
   int numthreads;
   #pragma omp parallel
   if(omp_get_thread_num()==0)
@@ -148,6 +174,13 @@ int main(int argc, char** argv){
   sinfile = getenv("SINFILE");
   thefile = getenv("THEFILE");
   outfile = getenv("OUTFILE");
+
+
+  pidxfile = getenv("PINDEX");
+  pvalfile = getenv("PVALUE");
+  bidxfile = getenv("BINDEX");
+  bvalfile = getenv("BVALUE");
+
 
   //FIND NUMBER OF TILES
   numxtile = numx/spatsize;
@@ -881,7 +914,7 @@ int main(int argc, char** argv){
     float error = norm_kernel(res,numray);
     float gradnorm = norm_kernel(gra,numpix);
     printf("iter: %d error: %e gradnorm: %e\n",0,error,gradnorm);
-    printf("Before save direction.\n");
+    
     fflush(stdout);
     //SAVE DIRECTION
     copy_kernel(dir,gra,numpix);
@@ -912,7 +945,7 @@ int main(int argc, char** argv){
       float gradnorm = norm_kernel(gra,numpix);
       //UPDATE DIRECTION
       printf("iter: %d error: %e gradnorm: %e\n",iter,error,gradnorm);
-      printf("Before sxay kernel\n");
+    
       fflush(stdout);
       //fprintf(resf,"%e %e\n",error,gradnorm);
       float beta = gradnorm/oldgradnorm;
@@ -947,6 +980,26 @@ int main(int argc, char** argv){
   delete[] objtemp;
 
   printf("Total Time: %e\n",omp_get_wtime()-timetot);
+
+  if(mem == DRAGON_MAP){
+    if(dragon_unmap(proj_buffindex_d) != D_OK){
+          printf("Unmap failed for proj_buffindex_d\n");
+          return -1;
+    }
+    if(dragon_unmap(proj_buffvalue_d) != D_OK){
+          printf("Unmap failed for proj_buffvalue_d\n");
+          return -1;
+    }
+    if(dragon_unmap(back_buffindex_d) != D_OK){
+          printf("Unmap failed for back_buffindex_d\n");
+          return -1;
+    }
+    if(dragon_unmap(back_buffvalue_d) != D_OK){
+          printf("Unmap failed for back_buffvalue_d\n");
+          return -1;
+    }
+  }
+
 
   return 0;
 }

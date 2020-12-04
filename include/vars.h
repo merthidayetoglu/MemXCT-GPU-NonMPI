@@ -6,6 +6,7 @@
 #include <complex>
 #include <limits>
 #include <omp.h>
+#include <dragon.h>
 
 using namespace std;
 
@@ -13,6 +14,15 @@ struct matrix{
   int ind;
   float len;
 };
+
+typedef enum {
+    GPUMEM = 0,
+    UVM_READONLY = 1,
+    UVM_DIRECT = 2,
+    UVM_READONLY_NVLINK = 3,
+    UVM_DIRECT_NVLINK = 4,
+    DRAGON_MAP = 5,
+} mem_type;
 
 void findnumpix(float, float, float*, int*);
 void findpixind(float, float, float*, int*, int, int*);

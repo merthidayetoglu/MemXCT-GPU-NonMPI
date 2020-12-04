@@ -1,11 +1,11 @@
 #!/bin/bash
 
 #DOMAIN INFORMATION
-export NUMTHE=2400
-export NUMRHO=2048
+export NUMTHE=1500
+export NUMRHO=1024
 export PIXSIZE=1
 #SOLVER DATA
-export NUMITER=24
+export NUMITER=25
 #TILE SIZE (MUST BE POWER OF TWO)
 export SPATSIZE=128
 export SPECSIZE=128
@@ -16,10 +16,17 @@ export BACKBLOCK=256
 export PROJBUFF=48 #KB
 export BACKBUFF=48 #KB
 #I/O FILES
-export THEFILE=./datasets/ADS4_theta.bin
-export SINFILE=./datasets/ADS4_sinogram.bin
-export OUTFILE=./datasets/recon_ADS4.bin
+export THEFILE=./datasets/ADS3_theta.bin
+export SINFILE=./datasets/ADS3_sinogram.bin
+export OUTFILE=./datasets/recon_ADS3.bin
 
 export OMP_NUM_THREADS=1
 
-build/exe/src/main.cu.exe
+export PINDEX=/mnt/nvme0/memxctdata/ADS3/pidxfile.bin
+export PVALUE=/mnt/nvme0/memxctdata/ADS3/pvalfile.bin
+export BINDEX=/mnt/nvme0/memxctdata/ADS3/bidxfile.bin
+export BVALUE=/mnt/nvme0/memxctdata/ADS3/bvalfile.bin
+
+
+#nvprof --analysis-metrics -f -o analysis.nvvp build/exe/src/main.cu.exe
+build/exe/src/main.cu.exe 5
